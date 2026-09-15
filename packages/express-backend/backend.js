@@ -104,5 +104,5 @@ const deleteUserById = (id) => {
         users["users_list"].splice(index, 1);
         return true;
     }
-    return false;
+    res.status(404).send("Resource not found.");
 }
