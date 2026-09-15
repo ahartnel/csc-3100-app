@@ -4,6 +4,7 @@ import cors from "cors";
 
 const app = express();
 const port = 8000;
+const generateId = () => Math.random().toString(36).substring(2, 7);
 
 app.use(cors());
 app.use(express.json());
@@ -26,7 +27,11 @@ app.delete("/users/:id", (req, res) => {
     const id = req.params["id"];
     const result = deleteUserById(id);
 
-    res.send(result);
+    if (result) {
+        res.status(204).send();
+    } else {
+        res.status(404).send("Resource not found.");
+    }
 });
 
 app.get("/users", (req, res) => {
@@ -43,8 +48,9 @@ app.get("/users", (req, res) => {
 
 app.post("/users", (req, res) => {
     const userToAdd = req.body;
-    addUser(userToAdd);
-    res.send();
+    userToAdd["id"] = generateId();
+    const newUser = addUser(userToAdd);
+    res.status(201).send(newUser);
 });
 
 app.listen(port, () => {
@@ -106,5 +112,5 @@ const deleteUserById = (id) => {
         users["users_list"].splice(index, 1);
         return true;
     }
-    res.status(404).send("Resource not found.");
+    return false;
 }

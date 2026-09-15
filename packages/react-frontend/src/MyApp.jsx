@@ -7,15 +7,36 @@ function MyApp() {
     const [characters, setCharacters] = useState([]);
 
     function removeOneCharacter(index) {
-        const updated = characters.filter((character, i) => {
-            return i !== index;
-        });
-        setCharacters(updated);
+
+        fetch(`http://localhost:8000/users/${characters[index].id}`, {
+            method: "DELETE",
+        })
+            .then(res => {
+                if (res.status === 204) {
+                    const updated = characters.filter((character, i) => {
+                        return i !== index;
+                    });
+                    setCharacters(updated);
+                } else {
+                    console.log("Failed to delete user.");
+                }
+            })
+            .catch((error) => console.log(error))
+
     }
 
     function updateList(person) {
         postUser(person)
-            .then(() => setCharacters([...characters, person]))
+            .then((res) => {
+                if (res.status === 201) {
+                    return res.json();
+                }
+            })
+            .then((newUser) => {
+                if (newUser) {
+                    setCharacters([...characters, newUser]);
+                }
+            })
             .catch((error) => console.log(error));
     }
 
