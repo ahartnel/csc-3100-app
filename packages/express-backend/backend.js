@@ -1,6 +1,16 @@
 // backend.js
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
+import mongoose from "mongoose";
+import { addUser, getUsers, findUserById, removeUser } from "./services/user-service.js";
+
+dotenv.config();
+
+const { MONGO_CONNECTION_STRING } = process.env;
+
+mongoose.connect(MONGO_CONNECTION_STRING + "users")
+    .catch((error) => console.log(error));
 
 const app = express();
 const port = 8000;
@@ -14,43 +24,59 @@ app.get("/", (req, res) => {
 });
 
 app.get("/users/:id", (req, res) => {
-    const id = req.params["id"]; //or req.params.id
-    let result = findUserById(id);
-    if (result === undefined) {
-        res.status(404).send("Resource not found.");
-    } else {
-        res.send(result);
-    }
+    const id = req.params["id"];
+
+    findUserById(id)
+        .then((user) => {
+            if (!user) {
+                res.status(404).send("Resource not found.");
+            } else {
+                res.send(user);
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+        })
 });
 
 app.delete("/users/:id", (req, res) => {
     const id = req.params["id"];
-    const result = deleteUserById(id);
 
-    if (result) {
-        res.status(204).send();
-    } else {
-        res.status(404).send("Resource not found.");
-    }
+    removeUser(id)
+        .then((user) => {
+            if (!user) {
+                res.status(404).send("Resource not found.")
+            } else {
+                res.status(204).send()
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+        })
 });
 
 app.get("/users", (req, res) => {
     const name = req.query.name;
     const job = req.query.job;
-    if (name != undefined && job != undefined) {
-        res.send(findUsersByNameAndJob(name, job));
-    } else if (name != undefined) {
-        res.send(findUserByName(name));
-    } else {
-        res.send(users);
-    }
+    getUsers(name, job)
+        .then((users) => {
+            res.send(users);
+        })
+        .catch((error) => {
+            console.error(error);
+        })
 });
 
 app.post("/users", (req, res) => {
     const userToAdd = req.body;
-    userToAdd["id"] = generateId();
-    const newUser = addUser(userToAdd);
-    res.status(201).send(newUser);
+
+    addUser(userToAdd)
+        .then((newUser) => {
+            res.status(201).send(newUser);
+        })
+        .catch((error) => {
+            console.error(error);
+        })
 });
 
 app.listen(port, () => {
@@ -95,15 +121,6 @@ const findUsersByNameAndJob = (name, job) => {
     return users["users_list"].filter(
         (user) => user["name"] === name && user["job"] === job
     );
-};
-
-
-const findUserById = (id) =>
-    users["users_list"].find((user) => user["id"] === id);
-
-const addUser = (user) => {
-    users["users_list"].push(user);
-    return user;
 };
 
 const deleteUserById = (id) => {
