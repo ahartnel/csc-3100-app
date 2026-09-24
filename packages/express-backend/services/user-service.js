@@ -39,16 +39,14 @@ function addUser(user) {
 }
 
 function getUsers(name, job) {
-  function getUsers(name, job) {
-    if (name === undefined && job === undefined) {
-      return userModel.find();
-    } else if (name && !job) {
-      return findUserByName(name);
-    } else if (job && !name) {
-      return findUserByJob(job);
-    } else {
-      return userModel.find({ name: name, job: job });
-    }
+  if (name === undefined && job === undefined) {
+    return userModel.find();
+  } else if (name && !job) {
+    return findUserByName(name);
+  } else if (job && !name) {
+    return findUserByJob(job);
+  } else {
+    return userModel.find({ name: name, job: job });
   }
 }
 
